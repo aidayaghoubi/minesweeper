@@ -22,9 +22,7 @@ const GridWithDragAndDrop = () => {
 
   function handleClickOnButton(fx) {
     if (bombs.includes(fx)) {
-      setFinishGame(true);
-      window.alert("You lose the game :( Try again");
-      resetGame();
+      finishGameHandler("lose")
     } else {
       checkBoxes(fx);
     }
@@ -71,12 +69,18 @@ const GridWithDragAndDrop = () => {
     setFlags(prev => prev.filter(el => el !== fx))
   }
 
+  function finishGameHandler(state) {
+    setFinishGame(true)
+    setTimeout(() => {
+      window.alert(state === "win" ? "you win the game" : "You lose the game :( Try again")
+    }, 900);
+    resetGame()
+  }
+
 
   useEffect(() => {
     if (Object.entries(boxes).length === 90) {
-      setFinishGame(true)
-      window.alert("you win the game")
-      resetGame()
+      finishGameHandler("win")
     }
   }, [boxes])
 
@@ -93,7 +97,7 @@ const GridWithDragAndDrop = () => {
         <div>
           {createArray(rowCount).map((_, row) => {
             return <div className="Rows">{
-              createArray(rowCount).map((_,column) => {
+              createArray(rowCount).map((_, column) => {
                 const fx = `${row}-${column}`;
                 if (!finishGame && flags.includes(fx)) {
                   return <Flag handleClick={() => removeFlag(fx)} />
