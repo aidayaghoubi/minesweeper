@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import "./index.css"
-import CreateButton from './CreateButtons';
+import CreateBombs from './CreateButtons';
 import checkAroundButton from './checkAround';
 import { checkBombCount } from './checkBombCount';
 import bomb from './assets/bomb.png'
@@ -8,12 +8,13 @@ import flag from './assets/flag.png'
 import Flag from './Flag';
 import Empty from './Empty';
 import Bomb from './Bomb';
+import createRandomBombs from './CreateButtons';
 
 const gameCount = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
 const GridWithDragAndDrop = () => {
-  const [bombs, setBombs] = useState(CreateButton())
+  const [bombs, setBombs] = useState(() => createRandomBombs())
   const [finishGame, setFinishGame] = useState(false)
   const [boxes, setBoxes] = useState({})
   const [flags, setFlags] = useState([])
@@ -73,7 +74,7 @@ const GridWithDragAndDrop = () => {
 
   function resetGame() {
     setTimeout(() => {
-      setBombs(CreateButton())
+      setBombs(CreateBombs())
       setBoxes({})
       setFlags([])
       setActiveMode("click")
@@ -81,39 +82,43 @@ const GridWithDragAndDrop = () => {
     }, [3000])
   }
 
+  function addFlag(fx) {
+    console.log(fx, flags);
+    setFlags(prev => ([...prev, fx]))
+  }
+
+  function removeFlag(fx) {
+    setFlags(prev => prev.filter(el => el !== fx))
+  }
+
   function handleClickOnButton(fx) {
-    if (flags.includes(fx) && activeMode === "flag") {
-      setFlags(prev => prev.filter(el => el !== fx))
-    } else if (!flags.includes(fx) && !boxes[fx]) {
-      if (activeMode === "flag") {
-        setFlags(prev => ([...prev, fx]))
-      } else if (bombs.includes(fx)) {
-        setFinishGame(true)
-        window.alert("you lose the game :( try again")
-        resetGame()
+    if (bombs.includes(fx)) {
+      setFinishGame(true)
+      window.alert("you lose the game :( try again")
+      resetGame()
+    } else {
+      const aroundButtons = checkAroundButton(fx)
+      const bombCount = checkBombCount(bombs, aroundButtons)
+      if (bombCount !== 0) {
+        setBoxes(prev => ({ ...prev, [fx]: bombCount }))
       } else {
-        const aroundButtons = checkAroundButton(fx)
-        const bombCount = checkBombCount(bombs, aroundButtons)
-        if (bombCount !== 0) {
-          setBoxes(prev => ({ ...prev, [fx]: bombCount }))
-        } else {
-          setBoxes(prev => ({ ...prev, [fx]: "empty" }))
-          aroundButtons.forEach(el => {
-            const aroundButtons = checkAroundButton(el)
-            const bombCount = checkBombCount(bombs, aroundButtons)
-            if (!flags.includes(el)) {
-              if (bombCount !== 0) {
-                setBoxes(prev => ({ ...prev, [el]: bombCount }))
-              } else {
-                setBoxes(prev => ({ ...prev, [el]: "empty" }))
-                aroundButtons.forEach(el => {
-                  firstSearch(el)
-                })
-              }
+        setBoxes(prev => ({ ...prev, [fx]: "empty" }))
+        aroundButtons.forEach(el => {
+          const aroundButtons = checkAroundButton(el)
+          const bombCount = checkBombCount(bombs, aroundButtons)
+          if (!flags.includes(el)) {
+            if (bombCount !== 0) {
+              setBoxes(prev => ({ ...prev, [el]: bombCount }))
+            } else {
+              setBoxes(prev => ({ ...prev, [el]: "empty" }))
+              aroundButtons.forEach(el => {
+                firstSearch(el)
+              })
             }
-          })
-        }
+          }
+        })
       }
+
     }
   }
 
@@ -125,13 +130,12 @@ const GridWithDragAndDrop = () => {
     }
   }, [boxes])
 
-  console.log(Object.entries(boxes).length, "dd");
   return (
     <div className='container'>
       <div className='game'>
         <div className='header'>
           <button className='activeMode' onClick={() => setActiveMode(activeMode === "click" ? "flag" : "click")}>
-            <img src={activeMode === "click" ? bomb : flag} />
+            <img src={activeMode === "click" ? bomb : flag} alt='flag' />
           </button>
           <button className='reset' onClick={resetGame}>Reset</button>
           <h2>Flags:{flags.length}</h2>
@@ -140,13 +144,14 @@ const GridWithDragAndDrop = () => {
           {gameCount.map(row => {
             return <div className="Rows">{
               gameCount.map(column => {
-                if ((!finishGame && bombs.includes(`${row}-${column}`)) && flags.includes(`${row}-${column}`)) {
-                  return <Flag handleClick={() => handleClickOnButton(`${row}-${column}`)} />
-                } else if (boxes[`${row}-${column}`]) {
-                  return <Empty value={boxes[`${row}-${column}`]} />
+                const fx = `${row}-${column}`;
+                if (!finishGame && flags.includes(fx)) {
+                  return <Flag handleClick={() => removeFlag(fx)} />
+                } else if (boxes[fx]) {
+                  return <Empty value={boxes[fx]} />
                 } else {
-                  return <button className='icons' onClick={() => handleClickOnButton(`${row}-${column}`)}>
-                    {finishGame && bombs.includes(`${row}-${column}`) && <Bomb />}
+                  return <button className='icons' onClick={() => activeMode === "click" ? handleClickOnButton(fx) : addFlag(fx)}>
+                    {finishGame && bombs.includes(fx) && <Bomb />}
                   </button>
                 }
               })}

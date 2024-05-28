@@ -1,10 +1,3 @@
-function CreateButton() {
-  const list = createRandomBombs()
-  return list
-}
-export default CreateButton
-
-
 function createRandomBombs() {
   const list = [];
   while (list.length < 10) {
@@ -17,3 +10,5 @@ function createRandomBombs() {
   }
   return list
 }
+
+export default createRandomBombs
