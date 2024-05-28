@@ -74,8 +74,8 @@ const GridWithDragAndDrop = () => {
 
   useEffect(() => {
     if (Object.entries(boxes).length === 90) {
-      window.alert("you win the game")
       setFinishGame(true)
+      window.alert("you win the game")
       resetGame()
     }
   }, [boxes])
@@ -84,11 +84,11 @@ const GridWithDragAndDrop = () => {
     <div className='container'>
       <div className='game'>
         <div className='controls'>
+          <h2>Flags:{flags.length}</h2>
           <button className='activeMode' onClick={() => setActiveMode(activeMode === "click" ? "flag" : "click")}>
             <img src={activeMode === "click" ? bombImg : flagImg} alt='flag' />
           </button>
           <button className='reset' onClick={resetGame}>Reset</button>
-          <h2>Flags:{flags.length}</h2>
         </div>
         <div>
           {createArray(rowCount).map((_, row) => {
