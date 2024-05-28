@@ -7,7 +7,7 @@ import flagImg from './assets/flag.png'
 
 import checkAroundButton from './utils/checkAround';
 import { checkBombCount } from './utils/checkBombCount';
-import createRandomBombs from './utils/createBombs';
+import createRandomBombs from './utils/CreateBombs';
 import { createArray } from './utils/createArray';
 
 const rowCount = 10
