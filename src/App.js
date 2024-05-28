@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import "./index.css"
-import CreateBombs from './CreateButtons';
-import checkAroundButton from './checkAround';
-import { checkBombCount } from './checkBombCount';
-import bomb from './assets/bomb.png'
-import flag from './assets/flag.png'
-import Flag from './Flag';
-import Empty from './Empty';
-import Bomb from './Bomb';
-import createRandomBombs from './CreateButtons';
 
-const gameCount = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+import { Flag, Bomb, Empty } from './BoxTypes';
+import bombImg from './assets/bomb.png'
+import flagImg from './assets/flag.png'
+
+import checkAroundButton from './utils/checkAround';
+import { checkBombCount } from './utils/checkBombCount';
+import createRandomBombs from './utils/CreateBombs';
+import { createArray } from './utils/createArray';
+
+const rowCount = 10
 
 
 const GridWithDragAndDrop = () => {
@@ -20,70 +20,50 @@ const GridWithDragAndDrop = () => {
   const [flags, setFlags] = useState([])
   const [activeMode, setActiveMode] = useState("click")
 
-
-  function last(el) {
-    if (!flags.includes(el)) {
-      const aroundButtons = checkAroundButton(el)
-      const bombCount = checkBombCount(bombs, aroundButtons)
-      if (bombCount !== 0) {
-        setBoxes(prev => ({ ...prev, [el]: bombCount }))
-      } else {
-        setBoxes(prev => ({ ...prev, [el]: "empty" }))
-        aroundButtons.forEach(item => finalStep(item))
-      }
+  function handleClickOnButton(fx) {
+    if (bombs.includes(fx)) {
+      setFinishGame(true);
+      window.alert("You lose the game :( Try again");
+      resetGame();
+    } else {
+      checkBoxes(fx);
     }
   }
 
-  function finalStep(el) {
-    if (!flags.includes(el)) {
-      const aroundButtons = checkAroundButton(el)
-      const bombCount = checkBombCount(bombs, aroundButtons)
-      if (bombCount !== 0) {
-        setBoxes(prev => ({ ...prev, [el]: bombCount }))
-      } else {
-        setBoxes(prev => ({ ...prev, [el]: "empty" }))
-      }
-    }
-  }
+  function checkBoxes(startEl) {
+    const boxQueue = [startEl];
+    const updatedBoxes = {};
 
-  function firstSearch(el) {
-    if (!flags.includes(el)) {
-      const aroundButtons = checkAroundButton(el)
-      const bombCount = checkBombCount(bombs, aroundButtons)
-      if (bombCount !== 0) {
-        setBoxes(prev => ({ ...prev, [el]: bombCount }))
-      } else {
-        setBoxes(prev => ({ ...prev, [el]: "empty" }))
-        aroundButtons.forEach(item => secondSearch(item))
+    while (boxQueue.length > 0) {
+      const box = boxQueue.pop();
+      if (!flags.includes(box) && !updatedBoxes.hasOwnProperty(box)) {
+        const aroundButtons = checkAroundButton(box);
+        const bombCount = checkBombCount(bombs, aroundButtons);
+        updatedBoxes[box] = bombCount !== 0 ? bombCount : "empty";
+        if (bombCount === 0) {
+          aroundButtons.forEach(item => {
+            if (!updatedBoxes.hasOwnProperty(item)) {
+              boxQueue.push(item);
+            }
+          });
+        }
       }
     }
-  }
 
-  function secondSearch(el) {
-    if (!flags.includes(el)) {
-      const aroundButtons = checkAroundButton(el)
-      const bombCount = checkBombCount(bombs, aroundButtons)
-      if (bombCount !== 0) {
-        setBoxes(prev => ({ ...prev, [el]: bombCount }))
-      } else {
-        setBoxes(prev => ({ ...prev, [el]: "empty" }))
-        aroundButtons.forEach(bb => last(bb))
-      }
-    }
+    setBoxes(prev => ({ ...prev, ...updatedBoxes }));
   }
 
   function resetGame() {
     setTimeout(() => {
-      setBombs(CreateBombs())
+      setBombs(() => createRandomBombs())
       setBoxes({})
       setFlags([])
       setActiveMode("click")
       setFinishGame(false)
-    }, [3000])
+    }, [2500])
   }
 
   function addFlag(fx) {
-    console.log(fx, flags);
     setFlags(prev => ([...prev, fx]))
   }
 
@@ -91,36 +71,6 @@ const GridWithDragAndDrop = () => {
     setFlags(prev => prev.filter(el => el !== fx))
   }
 
-  function handleClickOnButton(fx) {
-    if (bombs.includes(fx)) {
-      setFinishGame(true)
-      window.alert("you lose the game :( try again")
-      resetGame()
-    } else {
-      const aroundButtons = checkAroundButton(fx)
-      const bombCount = checkBombCount(bombs, aroundButtons)
-      if (bombCount !== 0) {
-        setBoxes(prev => ({ ...prev, [fx]: bombCount }))
-      } else {
-        setBoxes(prev => ({ ...prev, [fx]: "empty" }))
-        aroundButtons.forEach(el => {
-          const aroundButtons = checkAroundButton(el)
-          const bombCount = checkBombCount(bombs, aroundButtons)
-          if (!flags.includes(el)) {
-            if (bombCount !== 0) {
-              setBoxes(prev => ({ ...prev, [el]: bombCount }))
-            } else {
-              setBoxes(prev => ({ ...prev, [el]: "empty" }))
-              aroundButtons.forEach(el => {
-                firstSearch(el)
-              })
-            }
-          }
-        })
-      }
-
-    }
-  }
 
   useEffect(() => {
     if (Object.entries(boxes).length === 90) {
@@ -133,17 +83,17 @@ const GridWithDragAndDrop = () => {
   return (
     <div className='container'>
       <div className='game'>
-        <div className='header'>
+        <div className='controls'>
           <button className='activeMode' onClick={() => setActiveMode(activeMode === "click" ? "flag" : "click")}>
-            <img src={activeMode === "click" ? bomb : flag} alt='flag' />
+            <img src={activeMode === "click" ? bombImg : flagImg} alt='flag' />
           </button>
           <button className='reset' onClick={resetGame}>Reset</button>
           <h2>Flags:{flags.length}</h2>
         </div>
         <div>
-          {gameCount.map(row => {
+          {createArray(rowCount).map((_, row) => {
             return <div className="Rows">{
-              gameCount.map(column => {
+              createArray(rowCount).map((_,column) => {
                 const fx = `${row}-${column}`;
                 if (!finishGame && flags.includes(fx)) {
                   return <Flag handleClick={() => removeFlag(fx)} />
