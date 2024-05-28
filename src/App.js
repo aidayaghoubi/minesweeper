@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import "./index.css"
 
-import { Flag, Bomb, Empty } from './BoxTypes';
+import { Flag, Bomb, Empty } from './boxTypes';
 import bombImg from './assets/bomb.png'
 import flagImg from './assets/flag.png'
 
