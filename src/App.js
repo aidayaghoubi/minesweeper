@@ -7,15 +7,15 @@ import flagImg from './assets/flag.png'
 
 import checkAroundButton from './utils/checkAround';
 import { checkBombCount } from './utils/checkBombCount';
-import createRandomBombs from './utils/CreateBombs';
+import createRandomBombs from './utils/createBombs';
 import { createArray } from './utils/createArray';
 
 const rowCount = 10
 
 
 const GridWithDragAndDrop = () => {
-  const [bombs, setBombs] = useState(() => createRandomBombs())
-  const [finishGame, setFinishGame] = useState(false)
+  const [bombs, setBombs] = useState(createRandomBombs)
+  const [isFinishedGame, setIsFinishedGame] = useState(false)
   const [boxes, setBoxes] = useState({})
   const [flags, setFlags] = useState([])
   const [activeMode, setActiveMode] = useState("click")
@@ -47,7 +47,6 @@ const GridWithDragAndDrop = () => {
         }
       }
     }
-
     setBoxes(prev => ({ ...prev, ...updatedBoxes }));
   }
 
@@ -57,7 +56,7 @@ const GridWithDragAndDrop = () => {
       setBoxes({})
       setFlags([])
       setActiveMode("click")
-      setFinishGame(false)
+      setIsFinishedGame(false)
     }, [2500])
   }
 
@@ -70,7 +69,7 @@ const GridWithDragAndDrop = () => {
   }
 
   function finishGameHandler(state) {
-    setFinishGame(true)
+    setIsFinishedGame(true)
     setTimeout(() => {
       window.alert(state === "win" ? "you win the game" : "You lose the game :( Try again")
     }, 900);
@@ -99,13 +98,13 @@ const GridWithDragAndDrop = () => {
             return <div className="Rows">{
               createArray(rowCount).map((_, column) => {
                 const fx = `${row}-${column}`;
-                if (!finishGame && flags.includes(fx)) {
+                if (!isFinishedGame && flags.includes(fx)) {
                   return <Flag handleClick={() => removeFlag(fx)} />
                 } else if (boxes[fx]) {
                   return <Empty value={boxes[fx]} />
                 } else {
                   return <button className='icons' onClick={() => activeMode === "click" ? handleClickOnButton(fx) : addFlag(fx)}>
-                    {finishGame && bombs.includes(fx) && <Bomb />}
+                    {isFinishedGame && bombs.includes(fx) && <Bomb />}
                   </button>
                 }
               })}
